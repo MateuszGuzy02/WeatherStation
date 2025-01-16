@@ -3,8 +3,8 @@
 #include <WebServer.h>
 #include <HTTPClient.h>
 
-const char* ssid = "Matys";
-const char* password = "MateuszGuzy123";
+const char* ssid = "Wifi";
+const char* password = "Haslo";
 
 const char* apSSID = "ESP32-AP";
 const char* apPassword = "12345678";
@@ -66,7 +66,7 @@ void sendDataToServer(String sensorName, String location, String value1, String 
 {
   if (WiFi.status() == WL_CONNECTED) {
     WiFiClientSecure *client = new WiFiClientSecure;
-    client->setInsecure();  // Nie używaj certyfikatu SSL, dla prostoty
+    client->setInsecure(); 
 
     HTTPClient https;
     https.begin(*client, serverName); 
@@ -127,13 +127,11 @@ void setup()
   server.on("/", handleRoot);
   server.on("/data", HTTP_POST, handleData);
 
-  // Uruchomienie serwera HTTP
   server.begin();
   Serial.println("HTTP server started");
 }
 
 void loop() 
 {
-  // Obsługa żądań klientów
   server.handleClient();
 }
