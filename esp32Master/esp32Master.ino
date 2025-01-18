@@ -3,13 +3,13 @@
 #include <WebServer.h>
 #include <HTTPClient.h>
 
-const char* ssid = "Wifi";
-const char* password = "Haslo";
+const char* ssid = "Matys";
+const char* password = "MateuszGuzy123";
 
 const char* apSSID = "ESP32-AP";
 const char* apPassword = "12345678";
 
-const char* serverName = "https://192.168.0.106/test/post-esp-data.php";
+const char* serverName = "http://192.168.0.106/test/post-esp-data.php";
 
 String apiKeyValue = "tPmAT5Ab3j7F9";
 
@@ -37,9 +37,11 @@ void handleData()
         value2 = server.arg("humidity");   
       }
     } else if (sensor == "BMP280") {
-      if (server.hasArg("temperature") && server.hasArg("pressure")) {
-        value1 = server.arg("temperature");  
-        value2 = server.arg("pressure");  
+      if (server.hasArg("temperature") && server.hasArg("humidity") && server.hasArg("pressure")) {
+        value1 = server.arg("temperature");
+        value2 = server.arg("humidity");  
+        value3 = server.arg("pressure");
+        
       }
     }
 
@@ -51,6 +53,8 @@ void handleData()
       Serial.println(value1);
       Serial.print("Value2: ");
       Serial.println(value2);
+      Serial.print("Value3: ");
+      Serial.println(value3);
 
 
     sendDataToServer(sensor, location, value1, value2, value3);
@@ -65,13 +69,12 @@ void handleData()
 void sendDataToServer(String sensorName, String location, String value1, String value2, String value3) 
 {
   if (WiFi.status() == WL_CONNECTED) {
-    WiFiClientSecure *client = new WiFiClientSecure;
-    client->setInsecure(); 
+    WiFiClient client;
 
-    HTTPClient https;
-    https.begin(*client, serverName); 
+    HTTPClient http;
+    http.begin(client, serverName); 
 
-    https.addHeader("Content-Type", "application/x-www-form-urlencoded");
+    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
 
    
     String httpRequestData = "api_key=" + apiKeyValue 
@@ -86,7 +89,7 @@ void sendDataToServer(String sensorName, String location, String value1, String 
     Serial.println(httpRequestData);
 
     
-    int httpResponseCode = https.POST(httpRequestData);
+    int httpResponseCode = http.POST(httpRequestData);
 
     if (httpResponseCode > 0) {
       Serial.print("HTTP Response code: ");
@@ -97,7 +100,7 @@ void sendDataToServer(String sensorName, String location, String value1, String 
       Serial.println(httpResponseCode);
     }
 
-    https.end(); 
+    http.end(); 
   } else {
     Serial.println("Wi-Fi not connected");
   }
@@ -134,4 +137,17 @@ void setup()
 void loop() 
 {
   server.handleClient();
+
+  // Check Wi-Fi connection status 
+  if (WiFi.status() != WL_CONNECTED) { 
+    Serial.println("Wi-Fi disconnected! Reconnecting..."); 
+    WiFi.begin(ssid, password); 
+
+    while (WiFi.status() != WL_CONNECTED) { 
+      delay(500); 
+      Serial.print("."); 
+    } 
+
+    Serial.println("\nReconnected to Wi-Fi"); 
+  }
 }

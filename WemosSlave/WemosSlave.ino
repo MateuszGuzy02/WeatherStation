@@ -40,6 +40,8 @@ void setup()
 
 void loop() 
 {
+  unsigned long freeMemoryBefore = ESP.getFreeHeap();
+  Serial.println("Free memory before sending packet: " + String(freeMemoryBefore));
   sensors_event_t humidity, temperature;
   aht.getEvent(&humidity, &temperature);
 
@@ -72,9 +74,19 @@ void loop()
 
     http.end();
   } 
-  else {
-    Serial.println("WiFi Disconnected");
+  else 
+  {
+    Serial.println("WiFi Disconnected! Reconnecting...");
+    WiFi.begin(apSSID, apPassword); 
+    while (WiFi.status() != WL_CONNECTED) { 
+      delay(500); 
+      Serial.print("."); 
+    } 
+    
+    Serial.println("\nReconnected to ESP32 AP");
   }
 
+  unsigned long freeMemoryAfter = ESP.getFreeHeap();
+  Serial.println("Free memory after sending packet: " + String(freeMemoryAfter));
   delay(10000);
 }
