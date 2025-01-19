@@ -3,6 +3,16 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_AHTX0.h>
 #include <Adafruit_BMP280.h>
+#include <Wire.h>
+#include <Adafruit_SSD1306.h>
+#include <Adafruit_GFX.h>
+
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 32 
+#define OLED_RESET    -1
+#define SCREEN_ADDRESS 0x3C
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 const char* apSSID = "ESP32-AP";
 const char* apPassword = "12345678";
@@ -43,19 +53,27 @@ void setup()
     Serial.println("Could not find a valid BMP280 sensor, check wiring!");
     while (1);
   }
+
+  if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;);
+  }
+
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
 }
 
 void loop() 
 {
-  unsigned long freeMemoryBefore = ESP.getFreeHeap();
-  Serial.println("Free memory before sending packet: " + String(freeMemoryBefore));
-
   sensors_event_t humidity, temperature;
   aht.getEvent(&humidity, &temperature);
 
   float hum = humidity.relative_humidity;
   float temp = bmp.readTemperature();
   float pressure = bmp.readPressure() / 100;
+
+  displayData(temp, hum, pressure);
 
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
@@ -96,7 +114,27 @@ void loop()
     Serial.println("\nReconnected to ESP32 AP");
   }
 
-  unsigned long freeMemoryAfter = ESP.getFreeHeap();
-  Serial.println("Free memory after sending packet: " + String(freeMemoryAfter));
   delay(10000);
+}
+
+void displayData(float temp, float hum, float pressure)
+{
+  display.clearDisplay();
+
+  display.setCursor(37, 8);
+  display.print(temp);
+  display.print(" C");
+
+
+  display.setCursor(37, 16); 
+  display.print(hum);
+  display.print(" %");
+
+
+  display.setCursor(37, 24);
+  display.print(pressure, 1);
+  display.print(" hPa");
+
+  display.display();
+
 }

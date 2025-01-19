@@ -13,17 +13,20 @@ $charts->setObecnaTemperatura();
 $charts->setObecnaWilgotnosc();
 $charts->setObecneCisnienie();
 
-if(isset($_POST["fromDate"]) && isset($_POST["toDate"]))
-{
-    $charts->setTemperaturaWithDate($_POST["fromDate"], $_POST["toDate"]);
-    $charts->setWilgotnoscWithDate($_POST["fromDate"], $_POST["toDate"]);
-    $charts->setCisnienieWithDate($_POST["fromDate"], $_POST["toDate"]);
-}
-else
-{
-    $charts->setTemperature();
-    $charts->setWilgotnosc();
-    $charts->setCisnienie();
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $location = isset($_POST['location']) ? $_POST['location'] : 'Outdoor';
+    $dataType = isset($_POST['dataType']) ? $_POST['dataType'] : 'temperatura';
+    $fromDate = isset($_POST['fromDate']) ? $_POST['fromDate'] : null;
+    $toDate = isset($_POST['toDate']) ? $_POST['toDate'] : null;
+
+    if ($fromDate && $toDate) {
+
+        $charts->setDataWithDate($location, $dataType, $fromDate, $toDate);
+    } else {
+        // Ustaw dane bez zakresu dat
+        $charts->setData($location, $dataType);
+    }
 }
 
 ?>
@@ -32,45 +35,60 @@ else
         <title>Stacja pogodowa</title>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     </head>
     <body style="padding: 10px">
 
     <div class="container">
         <div class="row">
             <div class="col">
-                <form id="chartSelect">
+                <form method="POST" id="chartSelect" action="index.php">
+                    <h5>Czujnik</h5>
                     <div class="form-check">
-                        <input type="radio" class="form-check-input" id="chartType1" name="chartType" value="temp" checked>
-                        <label for="chartType1" class="form-check-label">Wykres temperatury</label>
+                        <input type="radio" class="form-check-input" id="locationRoom" name="location" value="Room">
+                        <label class="form-check-label" for="locationRoom">Wewnętrzny</label>
+                    </div>
+                    <div class="form-check">
+                        <input type="radio" class="form-check-input" id="locationOutdoor" name="location" value="Outdoor" checked>
+                        <label class="form-check-label" for="locationOutdoor">Zewnętrzny</label>
+                    </div>
+
+
+                    <h5>Wykres</h5>
+                    <div class="form-check">
+                        <input type="radio" class="form-check-input" id="chartType1" name="dataType" value="temperatura" checked>
+                        <label for="chartType1" class="form-check-label">Temperatury</label>
                     </div>
 
                     <div class="form-check">
-                        <input type="radio" class="form-check-input" id="chartType2" name="chartType" value="wilg">
-                        <label for="chartType2" class="form-check-label">Wykres wilgotności</label>
+                        <input type="radio" class="form-check-input" id="chartType2" name="dataType" value="wilgotnosc">
+                        <label for="chartType2" class="form-check-label">Wilgotności</label>
                     </div>
 
                     <div class="form-check">
-                        <input type="radio" class="form-check-input" id="chartType3" name="chartType" value="cis">
-                        <label for="chartType3" class="form-check-label">Wykres ciśnienia</label>
+                        <input type="radio" class="form-check-input" id="chartType3" name="dataType" value="cisnienie">
+                        <label for="chartType3" class="form-check-label">Ciśnienia</label>
                     </div>
-                    <button type="button" onclick="changeCharts()" class="btn btn-primary">Wybierz wykres</button>
+                    <button type="submit" class="btn btn-primary">Pokaż wykres</button>
                 </form>
             </div>
             <div class="col">
                 <div id="chartContainer" style="height: 300px; width: 100%;"></div>
-                <form method="post" action="index.php">
+
+                <form method="POST" action="index.php">
                     <div class="mb-3">
                         <label for="fromDate">Od:</label>
-                        <input name="fromDate" class="form-control" type="datetime-local"><br>
+                        <input name="fromDate" class="form-control" type="datetime-local" required><br>
                     </div>
 
                     <div class="mb-3">
                         <label for="toDate">Do:</label>
-                        <input name="toDate" class="form-control" type="datetime-local"><br>
+                        <input name="toDate" class="form-control" type="datetime-local" required><br>
                     </div>
 
                     <button type="submit" class="btn btn-primary">Wybierz zakres</button>
                 </form>
+
             </div>
         </div>
         <div class="row">
@@ -101,92 +119,48 @@ else
         <div class="col"></div>
     </div>
 
-    <script src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
+    <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
     <script>
         window.onload = (event) => {
-            changeCharts();
             currentValues();
         };
 
-        function changeCharts()
-        {
-            let elem = document.getElementsByName("chartType")
+        var unit = "";
+        var yAxisTitle = "";
+        var yValueFormatString = "";
 
-            for(let i = 0; i < elem.length; i++)
-            {
-                if(elem[i].checked)
-                {
-                    selectedCheck = elem[i].value
-                }
-            }
+        <?php if ($dataType == 'temperatura'): ?>
+            unit = "°C";
+            yAxisTitle = "Temperatura [°C]";
+            yValueFormatString = "##.##'°C'";
+        <?php elseif ($dataType == 'wilgotnosc'): ?>
+            unit = "%";
+            yAxisTitle = "Wilgotność [%]";
+            yValueFormatString = "##.##'%'";
+        <?php elseif ($dataType == 'cisnienie'): ?>
+            unit = "hPa";
+            yAxisTitle = "Ciśnienie [hPa]";
+            yValueFormatString = "####.##'hPa'";
+        <?php endif; ?>
 
-            if(selectedCheck == "temp")
-            {
-                var chart = new CanvasJS.Chart("chartContainer", {
-                    animationEnabled: true,
-                    title:{
-                        text: "Temperatura"
-                    },
-                    axisY: {
-                        title: "Temperatura [°C]",
-                    },
-                    data: [{
-                        type: "spline",
-                        markerSize: 5,
-                        xValueFormatString: "YYYY",
-                        yValueFormatString: "#,##0.##°C",
-                        xValueType: "dateTime",
-                        dataPoints: <?php echo json_encode($charts->getTemperatura(), JSON_NUMERIC_CHECK); ?>
-                    }]
-                });
-
-                chart.render();
-            }
-            else if(selectedCheck == "wilg")
-            {
-                var chart = new CanvasJS.Chart("chartContainer", {
-                    animationEnabled: true,
-                    title:{
-                        text: "Wilgotność"
-                    },
-                    axisY: {
-                        title: "Wilgotność [%]",
-                    },
-                    data: [{
-                        type: "spline",
-                        markerSize: 5,
-                        yValueFormatString: "##.##'%'",
-                        xValueType: "dateTime",
-                        dataPoints: <?php echo json_encode($charts->getWilgotnosc(), JSON_NUMERIC_CHECK); ?>
-                    }]
-                });
-
-                chart.render();
-            }
-
-            else if(selectedCheck == "cis")
-            {
-                var chart = new CanvasJS.Chart("chartContainer", {
-                    animationEnabled: true,
-                    title:{
-                        text: "Ciśnienie"
-                    },
-                    axisY: {
-                        title: "Ciśnienie [hPa]",
-                    },
-                    data: [{
-                        type: "spline",
-                        markerSize: 5,
-                        xValueFormatString: "YYYY",
-                        yValueFormatString: "####.##'hPa'",
-                        xValueType: "dateTime",
-                        dataPoints: <?php echo json_encode($charts->getCisnienie(), JSON_NUMERIC_CHECK); ?>
-                    }]
-                });
-
-                chart.render();
-            }
-        }
+            var chart = new CanvasJS.Chart("chartContainer", {
+                animationEnabled: true,
+                title: {
+                    text: "<?php echo ucfirst($dataType); ?> - <?php echo ucfirst($location); ?>"
+                },
+                axisY: {
+                    title: yAxisTitle
+                },
+                data: [{
+                    type: "spline",
+                    markerSize: 5,
+                    xValueFormatString: "YYYY-MM-DD HH:mm",
+                    yValueFormatString: yValueFormatString, // Dynamiczny format wartości Y
+                    xValueType: "dateTime",
+                    dataPoints: <?php echo json_encode($charts->getData($dataType), JSON_NUMERIC_CHECK); ?>
+                }]
+            });
+            chart.render();
 
         function currentValues() {
             $.ajax({

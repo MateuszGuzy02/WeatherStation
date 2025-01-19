@@ -40,8 +40,6 @@ void setup()
 
 void loop() 
 {
-  unsigned long freeMemoryBefore = ESP.getFreeHeap();
-  Serial.println("Free memory before sending packet: " + String(freeMemoryBefore));
   sensors_event_t humidity, temperature;
   aht.getEvent(&humidity, &temperature);
 
@@ -86,7 +84,5 @@ void loop()
     Serial.println("\nReconnected to ESP32 AP");
   }
 
-  unsigned long freeMemoryAfter = ESP.getFreeHeap();
-  Serial.println("Free memory after sending packet: " + String(freeMemoryAfter));
   delay(10000);
 }

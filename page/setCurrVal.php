@@ -10,14 +10,13 @@ $password = "root";
 $charts = new Charts($servername, $username, $password, $dbname);
 
 if (!$charts) {
-    http_response_code(500); // Zwróć błąd serwera
+    http_response_code(500);
     echo json_encode(["error" => "Błąd połączenia z bazą danych."]);
     exit;
 }
 
 $charts->setObecneDane();
 
-// Pobieramy aktualne wartości
 $data = array(
     'temperaturaZew' => $charts->getObecnaTemperaturaZewnetrzna(),
     'temperaturaWew' => $charts->getObecnaTemperaturaWewnetrzna(),

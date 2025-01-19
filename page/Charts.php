@@ -1,5 +1,4 @@
 <?php
-
 $servername = "localhost";
 $dbname = "esp_data";
 $username = "root";
@@ -24,6 +23,94 @@ class Charts
 
         if ($this->conn->connect_error) {
             die("Połączenie z bazą danych nieudane: " . $this->conn->connect_error);
+        }
+    }
+
+    public function setData($location, $dataType) 
+    {
+        $column = '';
+        switch($dataType) {
+            case 'temperatura':
+                $column = 'value1'; 
+                break;
+            case 'wilgotnosc':
+                $column = 'value2'; 
+                break;
+            case 'cisnienie':
+                $column = 'value3'; 
+                break;
+            default:
+                throw new Exception("Nieznany typ danych: $dataType");
+        }
+
+        $query = "SELECT `$column`, `reading_time` FROM SensorData WHERE `location` = '$location'";
+        $result = $this->conn->query($query);
+
+        if ($result === false) {
+            echo "Błąd zapytania: " . $this->conn->error;
+            return;
+        }
+
+        while ($row = $result->fetch_assoc()) {
+
+            if ($dataType == 'temperatura') {
+                array_push($this->temperatura, array("y" => $row[$column], "label" => $row["reading_time"]));
+            } elseif ($dataType == 'wilgotnosc') {
+                array_push($this->wilgotnosc, array("y" => $row[$column], "label" => $row["reading_time"]));
+            } elseif ($dataType == 'cisnienie') {
+                array_push($this->cisnienie, array("y" => $row[$column], "label" => $row["reading_time"]));
+            }
+        }
+    }
+
+    public function setDataWithDate($location, $dataType, $fromDate, $toDate)
+    {
+        $column = '';
+        switch ($dataType) {
+            case 'temperatura':
+                $column = 'value1';
+                break;
+            case 'wilgotnosc':
+                $column = 'value2';
+                break;
+            case 'cisnienie':
+                $column = 'value3';
+                break;
+            default:
+                throw new Exception("Nieznany typ danych: $dataType");
+        }
+
+        $query = "SELECT `$column`, `reading_time` FROM SensorData 
+                WHERE `location` = '$location' AND `reading_time` BETWEEN '$fromDate' AND '$toDate'";
+        $result = $this->conn->query($query);
+
+        if ($result === false) {
+            echo "Błąd zapytania: " . $this->conn->error;
+            return;
+        }
+
+        while ($row = $result->fetch_assoc()) {
+            if ($dataType == 'temperatura') {
+                array_push($this->temperatura, array("y" => $row[$column], "label" => $row["reading_time"]));
+            } elseif ($dataType == 'wilgotnosc') {
+                array_push($this->wilgotnosc, array("y" => $row[$column], "label" => $row["reading_time"]));
+            } elseif ($dataType == 'cisnienie') {
+                array_push($this->cisnienie, array("y" => $row[$column], "label" => $row["reading_time"]));
+            }
+        }
+    }
+    
+    public function getData($dataType)
+    {
+        switch ($dataType) {
+            case 'temperatura':
+                return $this->getTemperatura();
+            case 'wilgotnosc':
+                return $this->getWilgotnosc();
+            case 'cisnienie':
+                return $this->getCisnienie();
+            default:
+                return [];
         }
     }
 
