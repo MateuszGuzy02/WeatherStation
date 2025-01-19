@@ -2,10 +2,10 @@
 include_once "Charts.php";
 
 $servername = "localhost";
-$dbname = "esp_data";
+$dbname = "projektarm";
 $username = "root";
 $password = "root";
-
+$dataType = "";
 
 $charts = new Charts($servername, $username, $password, $dbname);
 
@@ -15,10 +15,10 @@ $charts->setObecneCisnienie();
 
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $location = isset($_POST['location']) ? $_POST['location'] : 'Outdoor';
-    $dataType = isset($_POST['dataType']) ? $_POST['dataType'] : 'temperatura';
-    $fromDate = isset($_POST['fromDate']) ? $_POST['fromDate'] : null;
-    $toDate = isset($_POST['toDate']) ? $_POST['toDate'] : null;
+    $location = $_POST['location'] ?? 'Outdoor';
+    $dataType = $_POST['dataType'] ?? 'temperatura';
+    $fromDate = $_POST['fromDate'] ?? null;
+    $toDate = $_POST['toDate'] ?? null;
 
     if ($fromDate && $toDate) {
 
@@ -41,54 +41,51 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     <div class="container">
         <div class="row">
+
             <div class="col">
                 <form method="POST" id="chartSelect" action="index.php">
                     <h5>Czujnik</h5>
                     <div class="form-check">
-                        <input type="radio" class="form-check-input" id="locationRoom" name="location" value="Room">
+                        <input type="radio" class="form-check-input" id="locationRoom" name="location" value="Room" <?php if(isset($_POST['location']) && $_POST['location'] == "Room") { echo "checked"; } ?>>
                         <label class="form-check-label" for="locationRoom">Wewnętrzny</label>
                     </div>
                     <div class="form-check">
-                        <input type="radio" class="form-check-input" id="locationOutdoor" name="location" value="Outdoor" checked>
+                        <input type="radio" class="form-check-input" id="locationOutdoor" name="location" value="Outdoor" <?php if(isset($_POST['location']) && $_POST['location'] == "Outdoor") { echo "checked"; } ?>>
                         <label class="form-check-label" for="locationOutdoor">Zewnętrzny</label>
                     </div>
 
 
                     <h5>Wykres</h5>
                     <div class="form-check">
-                        <input type="radio" class="form-check-input" id="chartType1" name="dataType" value="temperatura" checked>
+                        <input type="radio" class="form-check-input" id="chartType1" name="dataType" value="temperatura" <?php if(isset($_POST['dataType']) && $_POST['dataType'] == "temperatura") { echo "checked"; } ?>>
                         <label for="chartType1" class="form-check-label">Temperatury</label>
                     </div>
 
                     <div class="form-check">
-                        <input type="radio" class="form-check-input" id="chartType2" name="dataType" value="wilgotnosc">
+                        <input type="radio" class="form-check-input" id="chartType2" name="dataType" value="wilgotnosc" <?php if(isset($_POST['dataType']) && $_POST['dataType'] == "wilgotnosc") { echo "checked"; } ?>>
                         <label for="chartType2" class="form-check-label">Wilgotności</label>
                     </div>
 
                     <div class="form-check">
-                        <input type="radio" class="form-check-input" id="chartType3" name="dataType" value="cisnienie">
+                        <input type="radio" class="form-check-input" id="chartType3" name="dataType" value="cisnienie" <?php if(isset($_POST['dataType']) && $_POST['dataType'] == "cisnienie") { echo "checked"; } ?>>
                         <label for="chartType3" class="form-check-label">Ciśnienia</label>
                     </div>
-                    <button type="submit" class="btn btn-primary">Pokaż wykres</button>
-                </form>
-            </div>
-            <div class="col">
-                <div id="chartContainer" style="height: 300px; width: 100%;"></div>
 
-                <form method="POST" action="index.php">
                     <div class="mb-3">
                         <label for="fromDate">Od:</label>
-                        <input name="fromDate" class="form-control" type="datetime-local" required><br>
+                        <input name="fromDate" class="form-control" type="datetime-local" value="<?php if(isset($_POST['fromDate'])) { echo $_POST['fromDate']; } ?>" required><br>
                     </div>
 
                     <div class="mb-3">
                         <label for="toDate">Do:</label>
-                        <input name="toDate" class="form-control" type="datetime-local" required><br>
+                        <input name="toDate" class="form-control" type="datetime-local" value="<?php if(isset($_POST['toDate'])) { echo $_POST['toDate']; } ?>" required><br>
                     </div>
-
-                    <button type="submit" class="btn btn-primary">Wybierz zakres</button>
+                    <button type="submit" class="btn btn-primary">Pokaż wykres</button>
                 </form>
+            </div>
 
+            <div class="col">
+                <div id="chartContainer" style="height: 300px; width: 100%;"></div>
             </div>
         </div>
         <div class="row">
@@ -145,16 +142,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             var chart = new CanvasJS.Chart("chartContainer", {
                 animationEnabled: true,
+                zoomEnabled: true,
                 title: {
                     text: "<?php echo ucfirst($dataType); ?> - <?php echo ucfirst($location); ?>"
                 },
                 axisY: {
-                    title: yAxisTitle
+                    title: yAxisTitle,
+                    valueFormatString: yValueFormatString
+                },
+                axisX: {
+                    valueFormatString: "MM-DD HH-mm"
                 },
                 data: [{
                     type: "spline",
                     markerSize: 5,
-                    xValueFormatString: "YYYY-MM-DD HH:mm",
+                    xValueFormatString: "MM-DD HH:mm",
                     yValueFormatString: yValueFormatString, // Dynamiczny format wartości Y
                     xValueType: "dateTime",
                     dataPoints: <?php echo json_encode($charts->getData($dataType), JSON_NUMERIC_CHECK); ?>
@@ -164,7 +166,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         function currentValues() {
             $.ajax({
-                url: "http://localhost/test/setCurrVal.php",
+                url: "http://localhost/projektarm/setCurrVal.php",
                 dataType: 'json',
                 method: 'get',
                 timeout: 5000,

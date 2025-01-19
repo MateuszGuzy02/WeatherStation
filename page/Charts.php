@@ -54,11 +54,11 @@ class Charts
         while ($row = $result->fetch_assoc()) {
 
             if ($dataType == 'temperatura') {
-                array_push($this->temperatura, array("y" => $row[$column], "label" => $row["reading_time"]));
+                array_push($this->temperatura, array("y" => $row[$column], "label" => substr($row["reading_time"], 5, -3)));
             } elseif ($dataType == 'wilgotnosc') {
-                array_push($this->wilgotnosc, array("y" => $row[$column], "label" => $row["reading_time"]));
+                array_push($this->wilgotnosc, array("y" => $row[$column], "label" => substr($row["reading_time"], 5, -3)));
             } elseif ($dataType == 'cisnienie') {
-                array_push($this->cisnienie, array("y" => $row[$column], "label" => $row["reading_time"]));
+                array_push($this->cisnienie, array("y" => $row[$column], "label" => substr($row["reading_time"], 5, -3)));
             }
         }
     }
@@ -91,11 +91,11 @@ class Charts
 
         while ($row = $result->fetch_assoc()) {
             if ($dataType == 'temperatura') {
-                array_push($this->temperatura, array("y" => $row[$column], "label" => $row["reading_time"]));
+                array_push($this->temperatura, array("y" => $row[$column], "label" => substr($row["reading_time"], 5, -3)));
             } elseif ($dataType == 'wilgotnosc') {
-                array_push($this->wilgotnosc, array("y" => $row[$column], "label" => $row["reading_time"]));
+                array_push($this->wilgotnosc, array("y" => $row[$column], "label" => substr($row["reading_time"], 5, -3)));
             } elseif ($dataType == 'cisnienie') {
-                array_push($this->cisnienie, array("y" => $row[$column], "label" => $row["reading_time"]));
+                array_push($this->cisnienie, array("y" => $row[$column], "label" => substr($row["reading_time"], 5, -3)));
             }
         }
     }
@@ -126,7 +126,7 @@ class Charts
             }
 
             while ($row = $result->fetch_assoc()) {
-                array_push($this->temperatura, array("y" => $row["value1"], "label" => $row["reading_time"]));
+                array_push($this->temperatura, array("y" => $row["value1"], "label" => substr($row["reading_time"], 5, -3)));
             }
         }
     }
@@ -143,7 +143,7 @@ class Charts
             }
 
             while ($row = $result->fetch_assoc()) {
-                array_push($this->temperatura, array("y" => $row["value1"], "label" => $row["reading_time"]));
+                array_push($this->temperatura, array("y" => $row["value1"], "label" => substr($row["reading_time"], 5, -3)));
             }
         }
     }
@@ -161,10 +161,10 @@ class Charts
 
             while ($row = $result->fetch_assoc()) {
                 if ($czujnik == 'AHT10') {
-                    array_push($this->wilgotnosc, array("y" => $row["value2"], "label" => $row["reading_time"]));
+                    array_push($this->wilgotnosc, array("y" => $row["value2"], "label" => substr($row["reading_time"], 5, -3)));
                 }
                 else if($czujnik == "BMP280") {
-                    array_push($this->wilgotnosc, array("y" => $row["value2"], "label" => $row["reading_time"]));
+                    array_push($this->wilgotnosc, array("y" => $row["value2"], "label" => substr($row["reading_time"], 5, -3)));
                 }
             }
         }
@@ -183,10 +183,10 @@ class Charts
 
             while ($row = $result->fetch_assoc()) {
                 if ($czujnik == 'AHT10') {
-                    array_push($this->wilgotnosc, array("y" => $row["value2"], "label" => $row["reading_time"]));
+                    array_push($this->wilgotnosc, array("y" => $row["value2"], "label" => substr($row["reading_time"], 5, -3)));
                 }
                 else if($czujnik == "BMP280") {
-                    array_push($this->wilgotnosc, array("y" => $row["value2"], "label" => $row["reading_time"]));
+                    array_push($this->wilgotnosc, array("y" => $row["value2"], "label" => substr($row["reading_time"], 5, -3)));
                 }
             }
         }
@@ -205,7 +205,7 @@ class Charts
 
             while ($row = $result->fetch_assoc()) {
                 if ($czujnik == 'BMP280' && isset($row["value3"])) {
-                    array_push($this->cisnienie, array("y" => $row["value3"], "label" => $row["reading_time"]));
+                    array_push($this->cisnienie, array("y" => $row["value3"], "label" => substr($row["reading_time"], 5, -3)));
                 }
             }
         }
@@ -224,7 +224,7 @@ class Charts
 
             while ($row = $result->fetch_assoc()) {
                 if ($czujnik == 'BMP280' && isset($row["value3"])) {
-                    array_push($this->wilgotnosc, array("y" => $row["value3"], "label" => $row["reading_time"]));
+                    array_push($this->wilgotnosc, array("y" => $row["value3"], "label" => substr($row["reading_time"], 5, -3)));
                 }
             }
         }
