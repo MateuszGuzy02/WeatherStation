@@ -12,9 +12,11 @@ class Charts
     private $obecnaWilgotnoscZewnetrzna;
     private $obecnaWilgotnoscWewnetrzna;
     private $obecneCisnienieZewnetrzne;
+    private $obecneOswietlenieWewnetrzne;
     private $temperatura = array();
     private $wilgotnosc = array();
     private $cisnienie = array();
+    private $oswietlenie = array();
     private $czujniki = ["AHT10", "BMP280"];
 
     public function __construct($servername, $username, $password, $dbname)
@@ -39,6 +41,9 @@ class Charts
             case 'cisnienie':
                 $column = 'value3'; 
                 break;
+            case 'oswietlenie':
+                $column = 'value3';
+                break;
             default:
                 throw new Exception("Nieznany typ danych: $dataType");
         }
@@ -59,6 +64,8 @@ class Charts
                 array_push($this->wilgotnosc, array("y" => $row[$column], "label" => substr($row["reading_time"], 5, -3)));
             } elseif ($dataType == 'cisnienie') {
                 array_push($this->cisnienie, array("y" => $row[$column], "label" => substr($row["reading_time"], 5, -3)));
+            } elseif ($dataType == 'oswietlenie') {
+                array_push($this->oswietlenie, array("y" => $row[$column], "label" => substr($row["reading_time"], 5, -3)));
             }
         }
     }
@@ -74,6 +81,9 @@ class Charts
                 $column = 'value2';
                 break;
             case 'cisnienie':
+                $column = 'value3';
+                break;
+            case 'oswietlenie':
                 $column = 'value3';
                 break;
             default:
@@ -96,6 +106,8 @@ class Charts
                 array_push($this->wilgotnosc, array("y" => $row[$column], "label" => substr($row["reading_time"], 5, -3)));
             } elseif ($dataType == 'cisnienie') {
                 array_push($this->cisnienie, array("y" => $row[$column], "label" => substr($row["reading_time"], 5, -3)));
+            } elseif ($dataType == 'oswietlenie') {
+                array_push($this->oswietlenie, array("y" => $row[$column], "label" => substr($row["reading_time"], 5, -3)));
             }
         }
     }
@@ -109,6 +121,8 @@ class Charts
                 return $this->getWilgotnosc();
             case 'cisnienie':
                 return $this->getCisnienie();
+            case 'oswietlenie':
+                return $this->getOswietlenie();
             default:
                 return [];
         }
@@ -302,6 +316,25 @@ class Charts
         }
     }
 
+    public function setObecneOswietlenie()
+    {
+        foreach ($this->czujniki as $czujnik) {
+            $query = "SELECT `value3`, `reading_time`, `location` FROM SensorData WHERE `sensor` = '$czujnik' ORDER BY `reading_time` DESC LIMIT 1";
+            $result = $this->conn->query($query);
+    
+            if ($result) {
+                $row = $result->fetch_assoc();
+    
+                
+                if ($row) {
+                    if ($czujnik == 'AHT10' && $row["location"] == "Room") {
+                        $this->obecneOswietlenieWewnetrzne = $row["value3"];
+                    }
+                }
+            }
+        }
+    }
+
 
     public function setObecneDane()
     {
@@ -322,6 +355,7 @@ class Charts
                         if ($row["location"] == "Room") {
                             $this->obecnaTemperaturaWewnetrzna = $row["value1"];
                             $this->obecnaWilgotnoscWewnetrzna = $row["value2"];
+                            $this->obecneOswietlenieWewnetrzne = $row["value3"];
                         } elseif ($row["location"] == "Outdoor") {
                             $this->obecnaTemperaturaZewnetrzna = $row["value1"];
                             $this->obecnaWilgotnoscZewnetrzna = $row["value2"];
@@ -347,10 +381,12 @@ class Charts
     public function getWilgotnosc() { return $this->wilgotnosc; }
     public function getTemperatura() { return $this->temperatura; }
     public function getCisnienie() { return $this->cisnienie; }
+    public function getOswietlenie() { return $this->oswietlenie; }
     public function getObecnaTemperaturaZewnetrzna() { return $this->obecnaTemperaturaZewnetrzna; }
     public function getObecnaTemperaturaWewnetrzna() { return $this->obecnaTemperaturaWewnetrzna; }
     public function getObecnaWilgotnoscZewnetrzna() { return $this->obecnaWilgotnoscZewnetrzna; }
     public function getObecnaWilgotnoscWewnetrzna() { return $this->obecnaWilgotnoscWewnetrzna; }
     public function getObecneCisnienieZewnetrzne() { return $this->obecneCisnienieZewnetrzne; }
+    public function getObecneOswietlenieWewnetrzne() { return $this->obecneOswietlenieWewnetrzne; }
 
 }

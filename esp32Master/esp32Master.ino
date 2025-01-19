@@ -16,7 +16,6 @@ String apiKeyValue = "tPmAT5Ab3j7F9";
 
 WebServer server(80);
 
-// Obsługa endpointu głównego "/"
 void handleRoot() 
 {
   server.send(200, "text/plain", "Hello from ESP32!");
@@ -33,39 +32,37 @@ void handleData()
     String value3 = "";
 
     if (sensor == "AHT10") {
-      if (server.hasArg("temperature") && server.hasArg("humidity")) {
+      if (server.hasArg("temperature") && server.hasArg("humidity") && server.hasArg("lux")) {
         value1 = server.arg("temperature"); 
-        value2 = server.arg("humidity");   
+        value2 = server.arg("humidity");
+        value3 = server.arg("lux");   
       }
     } else if (sensor == "BMP280") {
       if (server.hasArg("temperature") && server.hasArg("humidity") && server.hasArg("pressure")) {
         value1 = server.arg("temperature");
         value2 = server.arg("humidity");  
         value3 = server.arg("pressure");
-        
       }
     }
 
-      Serial.print("Sensor: ");
-      Serial.println(sensor);
-      Serial.print("Location: ");
-      Serial.println(location);
-      Serial.print("Temperature: ");
-      Serial.println(value1);
-      Serial.print("Value2: ");
-      Serial.println(value2);
-      Serial.print("Value3: ");
-      Serial.println(value3);
-
+    Serial.print("Sensor: ");
+    Serial.println(sensor);
+    Serial.print("Location: ");
+    Serial.println(location);
+    Serial.print("Temperature: ");
+    Serial.println(value1);
+    Serial.print("Value2: ");
+    Serial.println(value2);
+    Serial.print("Value3: ");
+    Serial.println(value3);
 
     sendDataToServer(sensor, location, value1, value2, value3);
 
-    server.send(200, "text/plain", "Data received and sent to server");
+    server.send(200, "text/plain", "Dane otrzymane i wysłane do serwera");
   } else {
-    server.send(400, "text/plain", "Bad Request: Missing parameters");
+    server.send(400, "text/plain", "Zły request: Brakujących parametrów");
   }
 }
-
 
 void sendDataToServer(String sensorName, String location, String value1, String value2, String value3) 
 {
@@ -77,7 +74,6 @@ void sendDataToServer(String sensorName, String location, String value1, String 
 
     http.addHeader("Content-Type", "application/x-www-form-urlencoded");
 
-   
     String httpRequestData = "api_key=" + apiKeyValue 
                            + "&sensor=" + sensorName
                            + "&location=" + location
@@ -85,25 +81,23 @@ void sendDataToServer(String sensorName, String location, String value1, String 
                            + "&value2=" + value2
                            + "&value3=" + value3;
 
-    
     Serial.print("httpRequestData: ");
     Serial.println(httpRequestData);
 
-    
     int httpResponseCode = http.POST(httpRequestData);
 
     if (httpResponseCode > 0) {
-      Serial.print("HTTP Response code: ");
+      Serial.print("Kod odpowiedzi HTTP: ");
       Serial.println(httpResponseCode);
-      Serial.println("Wyslano do bazy danych!");
+      Serial.println("Wysłano do bazy danych!");
     } else {
-      Serial.print("Error code: ");
+      Serial.print("Kod błędu: ");
       Serial.println(httpResponseCode);
     }
 
     http.end(); 
   } else {
-    Serial.println("Wi-Fi not connected");
+    Serial.println("Brak połączenia Wi-Fi");
   }
 }
 
@@ -111,7 +105,7 @@ void setup()
 {
   Serial.begin(9600);
 
-  Serial.println("Connecting to Wi-Fi...");
+  Serial.println("Łączenie z Wi-Fi...");
   WiFi.begin(ssid, password);
 
   while (WiFi.status() != WL_CONNECTED) {
@@ -119,12 +113,12 @@ void setup()
     Serial.print(".");
   }
   
-  Serial.println("\nConnected to Wi-Fi");
-  Serial.print("ESP32 IP Address: ");
+  Serial.println("\nPołączono z Wi-Fi");
+  Serial.print("Adres IP ESP32: ");
   Serial.println(WiFi.localIP());
 
   WiFi.softAP(apSSID, apPassword);
-  Serial.print("AP IP address: ");
+  Serial.print("Adres IP AP: ");
   Serial.println(WiFi.softAPIP());
 
   // Konfiguracja endpointów serwera HTTP
@@ -132,16 +126,16 @@ void setup()
   server.on("/data", HTTP_POST, handleData);
 
   server.begin();
-  Serial.println("HTTP server started");
+  Serial.println("Serwer HTTP uruchomiony");
 }
 
 void loop() 
 {
   server.handleClient();
 
-  // Check Wi-Fi connection status 
+  // Sprawdzenie statusu połączenia Wi-Fi
   if (WiFi.status() != WL_CONNECTED) { 
-    Serial.println("Wi-Fi disconnected! Reconnecting..."); 
+    Serial.println("Brak połączenia z Wi-Fi! Ponowne łączenie..."); 
     WiFi.begin(ssid, password); 
 
     while (WiFi.status() != WL_CONNECTED) { 
@@ -149,6 +143,6 @@ void loop()
       Serial.print("."); 
     } 
 
-    Serial.println("\nReconnected to Wi-Fi"); 
+    Serial.println("\nPonownie połączono z Wi-Fi"); 
   }
 }

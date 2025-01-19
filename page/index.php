@@ -2,7 +2,7 @@
 include_once "Charts.php";
 
 $servername = "localhost";
-$dbname = "projektarm";
+$dbname = "esp_data";
 $username = "root";
 $password = "root";
 $dataType = "";
@@ -12,6 +12,7 @@ $charts = new Charts($servername, $username, $password, $dbname);
 $charts->setObecnaTemperatura();
 $charts->setObecnaWilgotnosc();
 $charts->setObecneCisnienie();
+$charts->setObecneOswietlenie();
 
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -21,10 +22,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $toDate = $_POST['toDate'] ?? null;
 
     if ($fromDate && $toDate) {
-
         $charts->setDataWithDate($location, $dataType, $fromDate, $toDate);
     } else {
-        // Ustaw dane bez zakresu dat
         $charts->setData($location, $dataType);
     }
 }
@@ -47,11 +46,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <h5>Czujnik</h5>
                     <div class="form-check">
                         <input type="radio" class="form-check-input" id="locationRoom" name="location" value="Room" <?php if(isset($_POST['location']) && $_POST['location'] == "Room") { echo "checked"; } ?>>
-                        <label class="form-check-label" for="locationRoom">Wewnętrzny</label>
+                        <label class="form-check-label" for="locationRoom">Otoczenia</label>
                     </div>
                     <div class="form-check">
                         <input type="radio" class="form-check-input" id="locationOutdoor" name="location" value="Outdoor" <?php if(isset($_POST['location']) && $_POST['location'] == "Outdoor") { echo "checked"; } ?>>
-                        <label class="form-check-label" for="locationOutdoor">Zewnętrzny</label>
+                        <label class="form-check-label" for="locationOutdoor">Pokojowy</label>
                     </div>
 
 
@@ -71,14 +70,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <label for="chartType3" class="form-check-label">Ciśnienia</label>
                     </div>
 
+                    <div class="form-check" >
+                        <input type="radio" class="form-check-input" id="chartType4" name="dataType" value="oswietlenie" <?php if(isset($_POST['dataType']) && $_POST['dataType'] == "oswietlenie") { echo "checked"; } ?>>
+                        <label for="chartType3" class="form-check-label">Oświetlenie</label>
+                    </div>
+
                     <div class="mb-3">
                         <label for="fromDate">Od:</label>
-                        <input name="fromDate" class="form-control" type="datetime-local" value="<?php if(isset($_POST['fromDate'])) { echo $_POST['fromDate']; } ?>" required><br>
+                        <input name="fromDate" class="form-control" type="datetime-local" value="<?php if(isset($_POST['fromDate'])) { echo $_POST['fromDate']; } ?>" ><br>
                     </div>
 
                     <div class="mb-3">
                         <label for="toDate">Do:</label>
-                        <input name="toDate" class="form-control" type="datetime-local" value="<?php if(isset($_POST['toDate'])) { echo $_POST['toDate']; } ?>" required><br>
+                        <input name="toDate" class="form-control" type="datetime-local" value="<?php if(isset($_POST['toDate'])) { echo $_POST['toDate']; } ?>" ><br>
                     </div>
                     <button type="submit" class="btn btn-primary">Pokaż wykres</button>
                 </form>
@@ -92,24 +96,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="col">
                 <table class="table table-bordered">
                     <tr>
-                        <td>Temperatura zewnętrzna</td>
+                        <td>Temperatura otoczenia</td>
                         <td id="currentTempZew"></td>
                     </tr>
                     <tr>
-                        <td>Temperatura wewnętrzna</td>
+                        <td>Temperatura pokojowa</td>
                         <td id="currentTempWew"></td>
                     </tr>
                     <tr>
-                        <td>Wilgotność zewnętrzna</td>
+                        <td>Wilgotność otoczenia</td>
                         <td id="currentWilgZew"></td>
                     </tr>
                     <tr>
-                        <td>Wilgotność wewnętrzna</td>
+                        <td>Wilgotność pokojowa</td>
                         <td id="currentWilgWew"></td>
                     </tr>
                     <tr>
-                        <td>Ciśnienie zewnętrzne</td>
+                        <td>Ciśnienie otoczenia</td>
                         <td id="currentCisnienie"></td>
+                    </tr>
+                    <tr>
+                        <td>Oświetlenie pokojowe</td>
+                        <td id="currentOswietlenie"></td>
                     </tr>
                 </table>
             </div>
@@ -118,9 +126,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
     <script>
+       
         window.onload = (event) => {
             currentValues();
         };
+
 
         var unit = "";
         var yAxisTitle = "";
@@ -138,6 +148,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             unit = "hPa";
             yAxisTitle = "Ciśnienie [hPa]";
             yValueFormatString = "####.##'hPa'";
+        <?php elseif ($dataType == 'oswietlenie'): ?>
+            unit = "lx";
+            yAxisTitle = "Luks [lx]";
+            yValueFormatString = "####'lx'";
         <?php endif; ?>
 
             var chart = new CanvasJS.Chart("chartContainer", {
@@ -166,7 +180,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         function currentValues() {
             $.ajax({
-                url: "http://localhost/projektarm/setCurrVal.php",
+                url: "http://localhost/test/setCurrVal.php",
                 dataType: 'json',
                 method: 'get',
                 timeout: 5000,
@@ -180,6 +194,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     document.getElementById("currentWilgZew").innerHTML = data.wilgotnoscZew + "%";
                     document.getElementById("currentWilgWew").innerHTML = data.wilgotnoscWew ? data.wilgotnoscWew + "%" : "Brak danych";
                     document.getElementById("currentCisnienie").innerHTML = data.cisnienie + " hPa";
+                    document.getElementById("currentOswietlenie").innerHTML = data.oswietlenie + " lx";
                 },
                 error: function (jqXHR, textStatus) {
                     if (textStatus === 'timeout') {
