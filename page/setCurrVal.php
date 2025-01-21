@@ -2,7 +2,7 @@
 include_once 'Charts.php';
 
 $servername = "localhost";
-$dbname = "esp_data";
+$dbname = "projektArm";
 $username = "root";
 $password = "root";
 

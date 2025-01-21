@@ -2,7 +2,7 @@
 include_once "Charts.php";
 
 $servername = "localhost";
-$dbname = "esp_data";
+$dbname = "projektarm";
 $username = "root";
 $password = "root";
 $dataType = "";
@@ -14,6 +14,10 @@ $charts->setObecnaWilgotnosc();
 $charts->setObecneCisnienie();
 $charts->setObecneOswietlenie();
 
+if(empty($_POST['location']))
+{
+    $location = "Room";
+}
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $location = $_POST['location'] ?? 'Outdoor';
@@ -34,7 +38,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <title>Stacja pogodowa</title>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
+        <script>
+            function setupChartToggle() {
+                if ($('#locationRoom').is(':checked')) {
+                    $('#chartType3').prop('disabled', true);
+                    $('#chartType4').prop('disabled', false);
+                } else if ($('#locationOutdoor').is(':checked')) {
+                    $('#chartType4').prop('disabled', true);
+                    $('#chartType3').prop('disabled', false);
+                }
+            }
+        </script>
     </head>
     <body style="padding: 10px">
 
@@ -45,11 +60,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <form method="POST" id="chartSelect" action="index.php">
                     <h5>Czujnik</h5>
                     <div class="form-check">
-                        <input type="radio" class="form-check-input" id="locationRoom" name="location" value="Room" <?php if(isset($_POST['location']) && $_POST['location'] == "Room") { echo "checked"; } ?>>
+                        <input type="radio" class="form-check-input" id="locationRoom" name="location" value="Room" <?php if($location == "Room") { echo "checked"; } ?>>
                         <label class="form-check-label" for="locationRoom">Otoczenia</label>
                     </div>
                     <div class="form-check">
-                        <input type="radio" class="form-check-input" id="locationOutdoor" name="location" value="Outdoor" <?php if(isset($_POST['location']) && $_POST['location'] == "Outdoor") { echo "checked"; } ?>>
+                        <input type="radio" class="form-check-input" id="locationOutdoor" name="location" value="Outdoor" <?php if($location == "Outdoor") { echo "checked"; } ?>>
                         <label class="form-check-label" for="locationOutdoor">Pokojowy</label>
                     </div>
 
@@ -124,13 +139,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="col"></div>
     </div>
 
-    <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
     <script>
        
         window.onload = (event) => {
             currentValues();
+            setupChartToggle()
         };
 
+        $('input[name="location"]').on('change', setupChartToggle);
 
         var unit = "";
         var yAxisTitle = "";
@@ -180,7 +196,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         function currentValues() {
             $.ajax({
-                url: "http://localhost/test/setCurrVal.php",
+                url: "http://localhost/projektarm/setCurrVal.php",
                 dataType: 'json',
                 method: 'get',
                 timeout: 5000,

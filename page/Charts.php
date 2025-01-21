@@ -1,9 +1,4 @@
 <?php
-$servername = "localhost";
-$dbname = "esp_data";
-$username = "root";
-$password = "root";
-
 class Charts
 {
     private $conn;
