@@ -2,7 +2,7 @@
 include_once "Charts.php";
 
 $servername = "localhost";
-$dbname = "projektarm";
+$dbname = "esp_data";
 $username = "root";
 $password = "root";
 $dataType = "";
@@ -37,8 +37,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <head>
         <title>Stacja pogodowa</title>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
         <script src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+        <link href= "./style.css" rel = "stylesheet">
         <script>
             function setupChartToggle() {
                 if ($('#locationRoom').is(':checked')) {
@@ -51,21 +53,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
         </script>
     </head>
-    <body style="padding: 10px">
 
     <div class="container">
         <div class="row">
-
-            <div class="col">
+            <div class="dane">
                 <form method="POST" id="chartSelect" action="index.php">
                     <h5>Czujnik</h5>
                     <div class="form-check">
                         <input type="radio" class="form-check-input" id="locationRoom" name="location" value="Room" <?php if($location == "Room") { echo "checked"; } ?>>
-                        <label class="form-check-label" for="locationRoom">Otoczenia</label>
+                        <label class="form-check-label" for="locationRoom">Pokojowy</label>
                     </div>
                     <div class="form-check">
                         <input type="radio" class="form-check-input" id="locationOutdoor" name="location" value="Outdoor" <?php if($location == "Outdoor") { echo "checked"; } ?>>
-                        <label class="form-check-label" for="locationOutdoor">Pokojowy</label>
+                        <label class="form-check-label" for="locationOutdoor">Otoczenie</label>
                     </div>
 
 
@@ -103,12 +103,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </form>
             </div>
 
-            <div class="col">
+            <div class="wykres">
                 <div id="chartContainer" style="height: 300px; width: 100%;"></div>
             </div>
         </div>
         <div class="row">
-            <div class="col">
+            <div class="tabelka">
                 <table class="table table-bordered">
                     <tr>
                         <td>Temperatura otoczenia</td>
@@ -136,7 +136,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     </tr>
                 </table>
             </div>
-        <div class="col"></div>
+        </div>
     </div>
 
     <script>
@@ -196,7 +196,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         function currentValues() {
             $.ajax({
-                url: "http://localhost/projektarm/setCurrVal.php",
+                url: "http://localhost/esp_data/setCurrVal.php",
                 dataType: 'json',
                 method: 'get',
                 timeout: 5000,
